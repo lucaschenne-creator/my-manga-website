@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的漫畫清單</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>📚 我的漫畫清單</h1>
+      <p>資料寫在 <code>data/comics.json</code>，網頁自動讀取並顯示。</p>
+    </header>
+
+    <section id="grid" class="grid" aria-live="polite"></section>
+
+    <footer class="footer">
+      <p>© <span id="year"></span> Lucas</p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
