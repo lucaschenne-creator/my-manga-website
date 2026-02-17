@@ -1,9 +1,19 @@
 const grid = document.getElementById("grid");
 const yearEl = document.getElementById("year");
 
+// 搜尋相關（如果 index.html 沒有這些元素，也不會炸）
+const searchEl = document.getElementById("search");
+const clearSearchBtn = document.getElementById("clearSearch");
+const countEl = document.getElementById("count");
+
 yearEl.textContent = new Date().getFullYear();
 
 const DATA_URL = "data/comics.json";
+
+// 原始資料 / 目前顯示資料
+let ALL = [];
+let CURRENT = [];
+let debounceTimer = null;
 
 function fallbackImgDataUrl() {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
@@ -35,6 +45,11 @@ function renderEmptyState(messageHtml) {
       ${messageHtml}
     </div>
   `;
+}
+
+function setCount(shown, total) {
+  if (!countEl) return;
+  countEl.textContent = total ? `顯示 ${shown} / ${total}` : "";
 }
 
 function createTagWrap(tags) {
@@ -108,11 +123,12 @@ function createCard(item) {
   return card;
 }
 
-function render(list) {
+function render(list, { emptyMsg } = {}) {
   grid.innerHTML = "";
 
   if (!Array.isArray(list) || list.length === 0) {
-    renderEmptyState(`目前沒有資料～去 <code>data/comics.json</code> 加幾筆就會出現 😆`);
+    renderEmptyState(emptyMsg || `目前沒有資料～去 <code>data/comics.json</code> 加幾筆就會出現 😆`);
+    setCount(0, ALL.length);
     return;
   }
 
@@ -121,6 +137,7 @@ function render(list) {
 
   if (safeList.length === 0) {
     renderEmptyState(`資料格式怪怪的耶 🤔 請確認 <code>data/comics.json</code> 是陣列，而且每筆是物件。`);
+    setCount(0, ALL.length);
     return;
   }
 
@@ -129,7 +146,67 @@ function render(list) {
     frag.appendChild(createCard(item));
   }
   grid.appendChild(frag);
+
+  setCount(safeList.length, ALL.length);
 }
+
+/* ---------------- 搜尋功能 ---------------- */
+
+function buildSearchText(item) {
+  const title = item?.title ? String(item.title) : "";
+  const author = item?.author ? String(item.author) : "";
+  const tags = normaliseTags(item?.tags).join(" ");
+  return `${title} ${author} ${tags}`.toLowerCase();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
+}
+
+function applySearch(query) {
+  const q = (query || "").trim().toLowerCase();
+
+  if (!q) {
+    CURRENT = ALL;
+    render(CURRENT);
+    return;
+  }
+
+  const filtered = ALL.filter(item => buildSearchText(item).includes(q));
+  CURRENT = filtered;
+
+  render(CURRENT, {
+    emptyMsg: `找不到符合 <b>${escapeHtml(query)}</b> 的結果 😭（可以試試作者或 tag）`
+  });
+}
+
+function wireSearchUI() {
+  // 如果頁面沒有搜尋欄，就不綁定（不報錯）
+  if (!searchEl) return;
+
+  searchEl.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      applySearch(searchEl.value);
+    }, 120);
+  });
+
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", () => {
+      searchEl.value = "";
+      applySearch("");
+      searchEl.focus();
+    });
+  }
+}
+
+/* ---------------- 資料載入 ---------------- */
 
 async function loadData() {
   try {
@@ -137,16 +214,23 @@ async function loadData() {
     if (!res.ok) throw new Error(`讀取失敗：HTTP ${res.status}`);
 
     const data = await res.json();
-    render(data);
+
+    ALL = Array.isArray(data) ? data : [];
+    CURRENT = ALL;
+
+    wireSearchUI();
+    render(CURRENT);
   } catch (err) {
     console.error(err);
 
-    // 先顯示空狀態，再加上錯誤提示
-    render([]);
+    ALL = [];
+    CURRENT = [];
+
+    render([], { emptyMsg: `目前沒有資料～去 <code>data/comics.json</code> 加幾筆就會出現 😆` });
     grid.insertAdjacentHTML("afterbegin", `
       <div style="margin-bottom:12px;color:#ffb4b4;font-size:13px;">
         無法讀取 <code>${DATA_URL}</code>。如果你是直接雙擊用 <code>file://</code> 開，瀏覽器通常會擋 fetch。
-        請用 VSCode Live Server 或 GitHub Pages 開啟。 
+        請用 VSCode Live Server 或 GitHub Pages 開啟。
       </div>
     `);
   }

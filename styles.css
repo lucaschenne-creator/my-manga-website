@@ -109,3 +109,53 @@
     color: rgba(255,255,255,.86);
   }
   
+  .topbar{
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search{
+  flex: 1;
+  min-width: 240px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+  outline: none;
+}
+
+.search:focus{
+  border-color: rgba(124,140,255,.55);
+  box-shadow: 0 0 0 3px rgba(124,140,255,.18);
+}
+
+/* 你之前如果已經有 btn，就不用重複；沒有就補上這個 */
+.btn{
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(124,140,255,.5);
+  background: rgba(124,140,255,.18);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.btn:hover{ background: rgba(124,140,255,.28); }
+
+/* 清除按鈕：低調版本 */
+.btn-ghost{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.18);
+}
+
+.btn-ghost:hover{
+  border-color: rgba(124,140,255,.45);
+}
+
+.count{
+  color: var(--muted);
+  font-size: 12px;
+}

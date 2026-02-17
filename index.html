@@ -11,6 +11,20 @@
       <header class="header">
         <h1>📚 我的漫畫清單</h1>
         <p>資料寫在 <code>data/comics.json</code>，網頁自動讀取並顯示。</p>
+
+        <div class="topbar">
+          <input
+            id="search"
+            class="search"
+            type="search"
+            placeholder="搜尋：名稱 / 作者 / 標籤（tag）"
+            autocomplete="off"
+          />
+          <button id="clearSearch" class="btn btn-ghost" type="button">
+            清除
+          </button>
+          <span id="count" class="count"></span>
+        </div>
       </header>
 
       <section id="grid" class="grid" aria-live="polite"></section>
